@@ -1,7 +1,6 @@
 > Boilerplate Go for Quotai 🍴 fork me
 
 # Usage
-
 ### Requirements
 - [just](https://github.com/casey/just)
 - Docker
@@ -14,6 +13,12 @@
 - `just run` starts a simulated lambda on port 9000
 - `just test` sends a request to the simulated lambda
 
+### Deployment
+```
+cd ops
+terraform init
+terraform apply (type yes if you agree to make the resources)
+```
 
 # Resources
 - cloudwatch, (scheduled runs)
