@@ -1,26 +1,33 @@
-name: quotia
-permissions: # required for oidc
-  id-token: write
-  contents: read
-on:
-  push:
-    branchs: [main]
-jobs:
-  deploy:
-    # skip deployment if a commit contains the the characters "[no ci]" brackets included
-    if: "! contains(github.event.commits[0].message, '[no ci]')"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: arn:aws:iam::919759177803:role/gh-action-assume
-          aws-region: us-east-1
-      - uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.4.6 # https://releases.hashicorp.com/terraform
-      - name: Deploy
-        working-directory: ./ops
-        run: |
-          terraform init
-          terraform apply -auto-approve
+# This is a GitHub Actions template for running the terraform on git push
+# You will need to go through the docs by GitHub on how to setup OpenID with AWS
+# https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+# Once done the pipeline will be authenticated as an AWS admin with a timed token to do a deployment
+
+# name: quotia
+# permissions: # required for oidc
+#   id-token: write
+#   contents: read
+# on:
+#   push:
+#     branchs: [main]
+# jobs:
+#   deploy:
+#     # skip deployment if a commit contains the the characters "[no ci]" brackets included
+#     if: "! contains(github.event.commits[0].message, '[no ci]')"
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           role-to-assume: arn:aws:iam::919759177803:role/gh-action-assume
+#           aws-region: us-east-1
+#       - uses: hashicorp/setup-terraform@v2
+#         with:
+#           terraform_version: 1.4.6 # https://releases.hashicorp.com/terraform
+#       - name: Deploy
+#         working-directory: ./ops
+#         run: |
+#           terraform init
+#           # could add a variable to get applied to lambda env here
+#           # i.e. terraform apply -auto-approve -var="KEY=${GITHUB_SECRET_VALUE}"
+#           terraform apply -auto-approve

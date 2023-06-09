@@ -39,7 +39,7 @@ terraform apply (type yes if you agree to make the resources)
 ```
 
 ## Automation
-I like to do solutions with GitHub Actions where any git push will trigger GitHub to deploy any code changes. This is a little more involved since you will need to create a OpenID with GitHub and AWS. Which provides a token to the pipeline to authenticate it with AWS. Then a terraform apply can be ran for you (if necessary) anytime you commit, deploying the updated lambda.
+I like to do solutions with GitHub Actions where any git push will trigger GitHub to deploy any code changes. This is a little more involved since you will need to create a [OpenID with GitHub and AWS](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services). Which provides a token to the pipeline to authenticate it with AWS. Then a terraform apply can be ran for you (if necessary) anytime you commit, deploying the updated lambda.
 
 # Secrets
 A .env file at the root will be read by Terraform. This would be a good way to load a KEY file to validate client requests.
