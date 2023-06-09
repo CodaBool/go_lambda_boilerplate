@@ -20,14 +20,16 @@ locals {
   memory = 512 # Mb
   path_to_docker_file = "../src"
   tag = "latest"
+  # cron expression https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html
   interval = "cron(0 12 1 * ? *)" # 1st of every month, 12pm UTC (7am est)
   keep_logs_for = 60 # days
+  # reads a .env file at the root. This will get passed to the lambda as env vars
   env = { for tuple in regexall("(.*)=(.*)", file("../.env")) : tuple[0] => tuple[1] }
   event_input = jsonencode({
-    YOUR_KEY_HERE = "YOUR_VALUE_HERE"
-    queryStringParameters = {
-      key = local.env["KEY"]
-    }
+    "key": "123abc",
+    "quotes_seen": [
+      1,  2
+    ]
   })
 
   # environment = {

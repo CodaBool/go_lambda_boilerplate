@@ -31,3 +31,6 @@
 - ecr
   - ecr policy to delete old images
   - push if change
+
+# Secrets
+A .env file at the root will be read by Terraform. This would be a good way to load a KEY file to validate client requests.
