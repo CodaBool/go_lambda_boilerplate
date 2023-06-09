@@ -24,7 +24,7 @@ locals {
   interval = "cron(0 12 1 * ? *)" # 1st of every month, 12pm UTC (7am est)
   keep_logs_for = 60 # days
   # reads a .env file at the root. This will get passed to the lambda as env vars
-  env = { for tuple in regexall("(.*)=(.*)", file("../.env")) : tuple[0] => tuple[1] }
+  env = fileexists("../.env") ? { for tuple in regexall("(.*)=(.*)", file("../.env")) : tuple[0] => tuple[1] } : var.env
   event_input = jsonencode({
     "key": "123abc",
     "quotes_seen": [
