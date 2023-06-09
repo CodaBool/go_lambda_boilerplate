@@ -1,0 +1,26 @@
+name: quotia
+permissions: # required for oidc
+  id-token: write
+  contents: read
+on:
+  push:
+    branchs: [main]
+jobs:
+  deploy:
+    # skip deployment if a commit contains the the characters "[no ci]" brackets included
+    if: "! contains(github.event.commits[0].message, '[no ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::919759177803:role/gh-action-assume
+          aws-region: us-east-1
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.4.6 # https://releases.hashicorp.com/terraform
+      - name: Deploy
+        working-directory: ./ops
+        run: |
+          terraform init
+          terraform apply -auto-approve

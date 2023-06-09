@@ -13,12 +13,15 @@
 - `just run` starts a simulated lambda on port 9000
 - `just test` sends a request to the simulated lambda
 
-### Deployment
+# Deployment
 ```
 cd ops
 terraform init
 terraform apply (type yes if you agree to make the resources)
 ```
+
+### Automation
+I like to do solutions with GitHub Actions where any git push will trigger GitHub to deploy any code changes. This is a little more involved since you will need to create a OpenID with GitHub and AWS. Which provides a token to the pipeline to authenticate it with AWS. Then a terraform apply can be ran for you (if necessary) anytime you commit, deploying the updated lambda.
 
 # Resources
 - cloudwatch, (scheduled runs)
