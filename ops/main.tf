@@ -40,7 +40,11 @@ locals {
 
 data "aws_caller_identity" "current" {}
 
-# Lambda
+resource "aws_lambda_function_url" "main" {
+  function_name      = aws_lambda_function.main.function_name
+  authorization_type = "NONE"
+}
+
 resource "aws_lambda_permission" "allow_cloudwatch" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
