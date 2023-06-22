@@ -6,7 +6,7 @@ provider "aws" {
 }
 
 terraform {
-  required_version = ">= 1.3.6, < 2.0.0"
+  required_version = ">= 1.4.6, < 2.0.0"
   required_providers {
     aws = {
       version = ">= 5.0, < 6.0"
@@ -19,23 +19,19 @@ locals {
   name = "quotia"
   memory = 512 # Mb
   path_to_docker_file = "../src"
+  path_to_env = "../.env"
   tag = "latest"
+  keep_logs_for = 60 # days
+
+  # Scheduling the lambda
   # cron expression https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html
   interval = "cron(0 12 1 * ? *)" # 1st of every month, 12pm UTC (7am est)
-  keep_logs_for = 60 # days
-  # reads a .env file at the root. This will get passed to the lambda as env vars
-  env = fileexists("../.env") ? { for tuple in regexall("(.*)=(.*)", file("../.env")) : tuple[0] => tuple[1] } : var.env
+  # if inputing something sensitive make sure to use a sensitive variable block 
+  # https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables
   event_input = jsonencode({
     "key": "123abc",
-    "quotes_seen": [
-      1,  2
-    ]
+    "quotes_seen": [ 1,  2 ]
   })
-
-  # environment = {
-  #   key = "YOUR_SECRET"
-  # }
-  # will read a .env file in the root
 }
 
 data "aws_caller_identity" "current" {}
@@ -95,14 +91,12 @@ resource "aws_lambda_function" "main" {
   role             = aws_iam_role.lambda_assume.arn
   package_type     = "Image"
   memory_size      = local.memory
-  timeout          = 900 # max 900
+  timeout          = 900 # max 900, default 15
   image_uri        = "${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com/${local.name}:latest"
-
-  # TODO: There should be a way to use Terraform filemd5 function for this
-  source_code_hash = split("sha256:", data.aws_ecr_image.lambda.id)[1]
-  # source_code_hash = filemd5("../dist/${each.value}")
+  source_code_hash = data.aws_ecr_image.lambda.image_digest
   environment {
-    variables = local.env
+    # reads a .env file at the root. This will get passed to the lambda as env vars
+    variables = fileexists("../.env") ? { for tuple in regexall("(.*?)=(.*)", file(local.path_to_env)) : tuple[0] => sensitive(tuple[1]) } : var.env
   }
 }
 
@@ -122,8 +116,6 @@ resource "aws_ecr_repository" "main" {
 
 resource "aws_ecr_lifecycle_policy" "remove_old_images" {
   repository = aws_ecr_repository.main.name
-  # example use of keeping certain tag image
-  # https://github.com/mathspace/terraform-aws-ecr-docker-image/blob/master/main.tf
   policy = jsonencode({
     rules = [{
       rulePriority = 1
@@ -141,15 +133,10 @@ resource "aws_ecr_lifecycle_policy" "remove_old_images" {
   })
 }
 
-# Necessary since the initial push would have relied on 
-data "external" "hash" {
-  program = ["./hash.sh", local.path_to_docker_file]
-}
-
-# Build and push the Docker image whenever the hash changes
+# Build and push the Docker image whenever any file changes
 resource "null_resource" "push" {
   triggers = {
-    hash = data.external.hash.result["hash"]
+    hash = md5(join("", [for f in fileset("${path.module}/src", "*"): filemd5("${path.module}/src/${f}")]))
   }
   provisioner "local-exec" {
     command     = "./push.sh ${local.path_to_docker_file} ${aws_ecr_repository.main.repository_url} ${local.tag}"

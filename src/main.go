@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
+
+var log zerolog.Logger
 
 func check(err error) {
 	if err != nil {
@@ -15,23 +16,16 @@ func check(err error) {
 	}
 }
 
-func buildLogger(isProduction bool) {
-	if isProduction {
-		// has no timestamp and outputs json
-		// by default all log levels are printed
-		// changing fieldname to message makes filtering easier in AWS
-		log.Logger = zerolog.New(os.Stderr).With().Logger()
-		// zerolog.SetGlobalLevel(zerolog.InfoLevel)
-		// https://github.com/rs/zerolog#error-logging
-		zerolog.ErrorFieldName = "message"
-		return
+func buildLogger() {
+	log = zerolog.New(os.Stderr).With().Logger()
+	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") == "" {
+		o := zerolog.ConsoleWriter{Out: os.Stdout, PartsExclude: []string{zerolog.TimestampFieldName}}
+		log = zerolog.New(o).With().Logger()
 	}
-	log.Logger = log.Output(zerolog.ConsoleWriter{
-		Out:          os.Stderr,
-		PartsExclude: []string{zerolog.TimestampFieldName},
-		FormatCaller: func(i interface{}) string { return "" },
-	}).Level(zerolog.DebugLevel).With().Caller().Logger()
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	if os.Getenv("QUIET") != "" {
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	}
 }
 
 type Input struct {
@@ -39,21 +33,21 @@ type Input struct {
 }
 
 func main() {
+	buildLogger()
 	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") == "" {
-		buildLogger(false)
-		handle(nil, Input{Start: false})
+		// write a test input for local development
+		handle(context.TODO(), Input{Start: false})
 	} else {
-		buildLogger(true)
 		lambda.Start(handle)
 	}
 }
 
 func handle(ctx context.Context, input Input) (string, error) {
-	log.Print("hello")
-	log.Print(ctx, input)
+	log.Print("input", input)
+
 	// cfg, err := config.LoadDefaultConfig(context.TODO())
 	// check(err)
 	// client := ec2.NewFromConfig(cfg)
 
-	return "", nil
+	return "done", nil
 }

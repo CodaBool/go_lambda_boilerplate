@@ -3,7 +3,7 @@
 # Usage
 ### Requirements
 - [just](https://github.com/casey/just)
-- [Docker](https://docs.docker.com/engine/install/)
+- [Docker](https://docs.docker.com/engine/install)
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [Terraform](https://developer.hashicorp.com/terraform/downloads)
 
