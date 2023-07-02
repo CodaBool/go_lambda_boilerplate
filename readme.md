@@ -37,6 +37,7 @@
 # cd ops
 terraform init
 terraform apply # type yes if you agree to make the resources
+# you can destroy anything created with a `terraform destroy`
 ```
 
 ## Automation
