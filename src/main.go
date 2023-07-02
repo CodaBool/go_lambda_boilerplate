@@ -3,8 +3,12 @@ package main
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	pg "github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/rs/zerolog"
 )
 
@@ -28,6 +32,8 @@ func buildLogger() {
 	}
 }
 
+// the event input for the lambda
+// Always capitalize exported props
 type Input struct {
 	Start bool `json:"start"`
 }
@@ -35,15 +41,43 @@ type Input struct {
 func main() {
 	buildLogger()
 	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") == "" {
-		// write a test input for local development
+		// run locally
 		handle(context.TODO(), Input{Start: false})
 	} else {
+		// run at AWS
 		lambda.Start(handle)
 	}
 }
 
+// always capitalize the first letter or the prop can't be accessed
+type TrendingGithub struct {
+	Name        string
+	FullName    string
+	Stars       int64
+	Description string
+	UpdatedAt   time.Time
+}
+
 func handle(ctx context.Context, input Input) (string, error) {
-	log.Print("input", input)
+	log.Print("input = ", input)
+	// use connection pooling for serverless designs
+	db, err := pgxpool.New(context.Background(), os.Getenv("PG_URI"))
+	check(err)
+	var gh []*TrendingGithub
+	// the pg scan package can easily map the sql output into the struct
+	//   If you want a ORM, GORM is a popular Go solution
+	//   which has all the ORM nice features like schema migrations
+	err = pg.Select(context.Background(), db, &gh, `SELECT * FROM trending_githubs LIMIT 25`)
+	check(err)
+	log.Print("selected rows ", len(gh))
+
+	for _, repo := range gh {
+		log.Print(repo.Name)
+	}
+
+	// example usage of the aws sdk
+	// you will need to update the lambda role to have the permissions
+	// to access the specific aws service (e.g. s3:* Allow policy)
 
 	// cfg, err := config.LoadDefaultConfig(context.TODO())
 	// check(err)

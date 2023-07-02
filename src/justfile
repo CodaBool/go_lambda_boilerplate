@@ -1,19 +1,25 @@
 build:
 	docker build -t quotai .
 
-run: build
+# if you assume into a role which generates your AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY
+run-assume: build
 	docker run \
 		-e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
 		-e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-''} \
+		-e AWS_LAMBDA_FUNCTION_TIMEOUT=900 \
+		--env-file ./.env \
 		-p 9000:8080 \
 		--name quotai \
 		--rm \
 		quotai
 
-test:
-	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" \
-		-d '{}'
-
-clean:
-	docker rm quotai
+# if you have written your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in a .env file
+run: build
+	docker run \
+		-e AWS_LAMBDA_FUNCTION_TIMEOUT=900 \
+		--env-file ./.env \
+		-p 9000:8080 \
+		--name quotai \
+		--rm \
+		quotai
