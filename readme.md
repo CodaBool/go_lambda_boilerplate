@@ -55,8 +55,18 @@ A .env file at the root will be read by Terraform. This would be a good way to l
 Normally a `just run` is all you need but it's faster to actually just run the go file locally. 
 
 To do that do install the packages and do run locally
+
 ```sh
 # cd src
 go get -d .
 go run .
+```
+
+This will call the handle function with a Input defined in the source code.
+
+Edit the argument for the local handle function call to try a different test.
+
+```go
+// inside main.go main function
+handle(context.TODO(), Input{SomeKeyFromAnInputStruct: someValueDefinedHere})
 ```
