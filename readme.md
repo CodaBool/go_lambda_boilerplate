@@ -37,6 +37,7 @@
 # cd ops
 terraform init
 terraform apply # type yes if you agree to make the resources
+# you can destroy anything created with a `terraform destroy`
 ```
 
 ## Automation
@@ -59,4 +60,13 @@ To do that, install the packages and run all go files
 # cd src
 go get -d .
 go run .
+```
+
+This will call the handle function with a Input defined in the source code.
+
+Edit the argument for the local handle function call to try a different test.
+
+```go
+// inside main.go main function
+handle(context.TODO(), Input{SomeKeyFromAnInputStruct: someValueDefinedHere})
 ```
