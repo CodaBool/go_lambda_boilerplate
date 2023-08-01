@@ -19,7 +19,6 @@ locals {
   name = "quotia"
   memory = 512 # Mb
   path_to_docker_file = "../src"
-  path_to_env = "../.env"
   tag = "latest"
   keep_logs_for = 60 # days
 
@@ -91,12 +90,13 @@ resource "aws_lambda_function" "main" {
   role             = aws_iam_role.lambda_assume.arn
   package_type     = "Image"
   memory_size      = local.memory
+  architectures    = ["arm64"]
   timeout          = 900 # max 900, default 15
   image_uri        = "${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com/${local.name}:latest"
   source_code_hash = data.aws_ecr_image.lambda.image_digest
   environment {
-    # reads a .env file at the root. This will get passed to the lambda as env vars
-    variables = fileexists("../.env") ? { for tuple in regexall("(.*?)=(.*)", file(local.path_to_env)) : tuple[0] => sensitive(tuple[1]) } : var.env
+    # reads a .env file in the docker file location. This will get passed to the lambda as env vars
+    variables = fileexists("${local.path_to_docker_file}/.env") ? { for tuple in regexall("(.*?)=(.*)", file("${local.path_to_docker_file}/.env")) : tuple[0] => sensitive(tuple[1]) } : var.env
   }
 }
 
@@ -136,7 +136,7 @@ resource "aws_ecr_lifecycle_policy" "remove_old_images" {
 # Build and push the Docker image whenever any file changes
 resource "null_resource" "push" {
   triggers = {
-    hash = md5(join("", [for f in fileset("${path.module}/src", "*"): filemd5("${path.module}/src/${f}")]))
+    hash = md5(join("", [for f in fileset(local.path_to_docker_file, "*"): filemd5("${local.path_to_docker_file}/${f}")]))
   }
   provisioner "local-exec" {
     command     = "./push.sh ${local.path_to_docker_file} ${aws_ecr_repository.main.repository_url} ${local.tag}"

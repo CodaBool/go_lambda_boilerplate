@@ -3,17 +3,9 @@ build:
 
 run: build
 	docker run \
-		-e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-		-e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
-		-e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-''} \
-		-p 9000:8080 \
+		--env-file ./.env \
 		--name quotai \
 		--rm \
 		quotai
 
-test:
-	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" \
-		-d '{}'
-
-clean:
-	docker rm quotai
+# 

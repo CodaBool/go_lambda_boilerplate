@@ -6,6 +6,7 @@
 - [Docker](https://docs.docker.com/engine/install)
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [Terraform](https://developer.hashicorp.com/terraform/downloads)
+- [Go](https://go.dev/doc/install)
 
 ### Commands
 > assumes you have a Docker daemon and have your AWS CLI configured. Also be cd'd into the src folder
@@ -32,10 +33,10 @@
   - push if change
 
 ## Command
-```
-cd ops
+```sh
+# cd ops
 terraform init
-terraform apply (type yes if you agree to make the resources)
+terraform apply # type yes if you agree to make the resources
 ```
 
 ## Automation
@@ -48,3 +49,14 @@ A .env file at the root will be read by Terraform. This would be a good way to l
 > logs are placed in a log group named `/aws/lambda/quotia`. You can read these logs with the CLI
 
 `aws logs tail /aws/lambda/quotia --follow --since 60m --format short`
+
+
+# Running locally
+Normally a `just run` is all you need but it's faster to actually just run the go file locally instead of building a binary to test changes. 
+
+To do that, install the packages and run all go files
+```sh
+# cd src
+go get -d .
+go run .
+```
